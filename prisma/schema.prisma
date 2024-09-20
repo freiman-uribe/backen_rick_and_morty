@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Rol {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // audit_fields
+  created_by  String?
+  created_at  DateTime @default(now())
+  modified_by String?
+  updated_at  DateTime @updatedAt
+  status      Boolean  @default(true)
+
+  name String?
+  code String  @unique
+
+  users_rol User[] @relation(name: "UserToRol")
+
+  @@map("tbl_rol")
+}
+
+model User {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // audit_fields
+  created_by  String?
+  created_at  DateTime @default(now())
+  modified_by String?
+  updated_at  DateTime @updatedAt
+  status      Boolean  @default(true)
+
+  full_name    String?
+  last_name    String?
+  email        String    @unique
+  password     String
+  rol          Rol       @relation(name: "UserToRol", fields: [rol_id], references: [id])
+  rol_id       String    @db.Uuid
+
+  @@map("tbl_user")
+}
+
+model Characters {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // audit_fields
+  old_id        Int?
+  created_by    String?
+  created_at    DateTime @default(now())
+  modified_by   String?
+  updated_at    DateTime @updatedAt
+  name          String?
+  status        String?
+  species       String?
+  type          String?
+  gender        String?
+  image         String?
+
+  episodes    EpisodeCharacter[] @relation(name: "characterEpisodes")
+
+  @@map("tbl_characters")
+}
+
+model Episodes {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // audit_fields
+  old_id        Int?
+  created_by    String?
+  created_at    DateTime @default(now())
+  modified_by   String?
+  updated_at    DateTime @updatedAt
+  name          String?
+  air_date      String?
+  episode       String?
+  url           String?
+
+  characters    EpisodeCharacter[] @relation(name: "characterEpisodes")
+
+  @@map("tbl_episodes")
+}
+
+model EpisodeCharacter {
+  id            String   @id @default(dbgenerated("gen_random_uuid()"))
+  characterId   String   @db.Uuid
+  episodeId     String   @db.Uuid
+
+  character     Characters @relation(name: "characterEpisodes", fields: [characterId], references: [id])
+  episode       Episodes   @relation(name: "characterEpisodes", fields: [episodeId], references: [id])
+
+  @@map("tbl_episode_character")
+}
